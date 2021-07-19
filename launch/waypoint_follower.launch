@@ -1,0 +1,3 @@
+<launch>
+  <node name="hopping_tour" pkg="hopping_tour" type="hopping_tour_IMU.py" />
+</launch>
