@@ -15,6 +15,11 @@ waypoints = [[126.950599, 37.455848], [126.45555, 37.3434343], [126.54444, 37.34
 # (lon, lat) = (x, y)
 # building 37 rooftop
 
+MAX_LIN_VEL = 1540
+MIN_LIN_VEL = 1440
+MAX_ANG_VEL = 1820
+MIN_ANG_VEL = 1220
+
 yaw = 0 # 0 at east, increase CCW
 lo = 0 # longitude
 la = 0 # latitude
@@ -48,25 +53,24 @@ def getOdom(odom_data):
 	yaw = -1 * euler[2] / math.pi * 180 # yaw in degree
 
 
-# have to know max/min cmd_vel value
 def cmd_vel_mapping(dist, max_dist, target_angle, min_target_angle):
-	vx = 0
-	wz = 0
+	vx = 0 # linear velocity
+	wz = 0 # minimum velocity
 	if (dist > max_dist):
-		vx = 0.5
+		vx = MAX_LIN_VEL
 	if (dist <= max_dist):
-		vx = 0.5 / max_dist * dist
+		vx = MAX_LIN_VEL / max_dist * dist
 	
 	if (90 < target_angle < 180):
-		wz = -0.5
+		wz = -MAX_ANG_VEL
 	elif (min_target_angle < target_angle < 90):
-		wz = -0.5 / (90 - min_target_angle) * (target_angle - min_target_angle)
+		wz = -MAX_ANG_VEL / (90 - min_target_angle) * (target_angle - min_target_angle)
 	elif (abs(target_angle) < min_target_angle):
 		wz = 0
 	elif (-90 < target_angle < -min_target_angle):
-		wz = -0.5 / (90 - min_target_angle) * (target_angle + min_target_angle)
+		wz = -MAX_ANG_VEL / (90 - min_target_angle) * (target_angle + min_target_angle)
 	elif (-180 < target_angle < 180):
-		wz = 0.5
+		wz = MAX_ANG_VEL
 	
 	return vx, wz
 	
@@ -83,7 +87,8 @@ def hopping_tour(waypoints):
 	rospy.Subscriber("fix", NavSatFix, getGPS)
 	rospy.Subscriber("imu_data", Imu , getIMU)
 	#rospy.Subscriber("odom", Odometry , getOdom)
-	twist_pub = rospy.Publisher("cmd_vel", Twist)
+	# twist_pub = rospy.Publisher("cmd_vel", Twist)
+	cmd_vel_pub = rospy.Publisher("cmd_vel", Vector3)
 	rate = rospy.Rate(10) # 10hz
 
 	print("system preparing...")
@@ -116,9 +121,12 @@ def hopping_tour(waypoints):
 		twist = Twist()
 		lin_vel, ang_vel = cmd_vel_mapping(dist, MAX_DIST * 1.2, target_angle, min_target_angle)
 		# MAX_DIST multiply factor needs to be adjusted manually
+		# vel_vec = Vector3(lin_vel, ang_vel, 0)
+		# cmd_vel_pub.publish(vel_vec)
 		twist.linear = Vector3(lin_vel, 0, 0)
-		twist.angular = Vector3(0, ang_vel, 0)
+		twist.angular = Vector3(0, 0, ang_vel)
 		twist_pub.publish(twist)
+		# note: cmd_vel type is Vector3? Twist?
 
 		if (wp_idx < n_waypoint):
 			if (dist < MAX_DIST):
