@@ -15,10 +15,10 @@ waypoints = [[126.950599, 37.455848], [126.45555, 37.3434343], [126.54444, 37.34
 # (lon, lat) = (x, y)
 # building 37 rooftop
 
-MAX_LIN_VEL = 1540
-MIN_LIN_VEL = 1440
-MAX_ANG_VEL = 1820
-MIN_ANG_VEL = 1220
+MAX_LIN_VEL = 30
+MIN_LIN_VEL = 0
+MAX_ANG_VEL = 30
+MIN_ANG_VEL = -30
 
 yaw = 0 # 0 at east, increase CCW
 lo = 0 # longitude
@@ -59,18 +59,21 @@ def cmd_vel_mapping(dist, max_dist, target_angle, min_target_angle):
 	if (dist > max_dist):
 		vx = MAX_LIN_VEL
 	if (dist <= max_dist):
-		vx = MAX_LIN_VEL / max_dist * dist
+		vx = (MAX_LIN_VEL - MIN_LIN_VEL) / max_dist * dist
 	
-	if (90 < target_angle < 180):
-		wz = -MAX_ANG_VEL
+
+	# if target angle is positive: turn right
+	# if target angle is negative: turn left
+	if (90 < target_angle < 180): # need to go right
+		wz = MAX_ANG_VEL
 	elif (min_target_angle < target_angle < 90):
-		wz = -MAX_ANG_VEL / (90 - min_target_angle) * (target_angle - min_target_angle)
+		wz = MAX_ANG_VEL / (90 - min_target_angle) * (target_angle - min_target_angle)
 	elif (abs(target_angle) < min_target_angle):
 		wz = 0
 	elif (-90 < target_angle < -min_target_angle):
-		wz = -MAX_ANG_VEL / (90 - min_target_angle) * (target_angle + min_target_angle)
-	elif (-180 < target_angle < 180):
-		wz = MAX_ANG_VEL
+		wz = MIN_ANG_VEL / (90 - min_target_angle) * (target_angle + min_target_angle)
+	elif (-180 < target_angle < -90):
+		wz = MIN_ANG_VEL
 	
 	return vx, wz
 	
