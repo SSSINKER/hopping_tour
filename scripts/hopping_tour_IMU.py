@@ -28,14 +28,6 @@ la = 0 # latitude
 gps_vec = np.array([0, 0])
 imu_vec = np.array([0, 0])
 
-def addAngle(angle1, angle2):
-	result = angle1 + angle2
-	if (result > 180):
-		result -= 360
-	elif (result < -180):
-		result += 360
-	return result
-
 def getGPS(gps_data):
 	global lo, la
 	lo = gps_data.longitude
@@ -97,7 +89,6 @@ def hopping_tour(waypoints):
 	rate = rospy.Rate(10) # 10hz
 
 	print("system preparing...")
-	
 	time.sleep(1)
 	print("system starts!")
 
@@ -139,6 +130,7 @@ def hopping_tour(waypoints):
 			if (dist < MAX_DIST):
 				close_cnt += 1
 				rospy.loginfo("reached at a waypoint. move to next waypoint")
+				time.sleep(5) # for field test & debugging
 		# else:
 			#stop ship
 
