@@ -1,6 +1,6 @@
 # hopping_tour
  
-Source code for Mission 2 of KABOART 2021 </br>
+Source code for Mission 2 of KABOAT 2021 </br>
 Enables autonomous maneuvering toward & between specified coordinates using GPS and IMU
 
 Installation Guide
