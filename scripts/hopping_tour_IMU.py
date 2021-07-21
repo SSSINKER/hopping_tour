@@ -14,7 +14,7 @@ a = 0.8 # factor for stability
 MAX_DIST = 2 * a
 waypoints = [[126.950599, 37.455848], [126.45555, 37.3434343], [126.54444, 37.34343444], [126.5455555, 37.43434343]]
 # (lon, lat) = (x, y)
-# building 37 rooftop
+# coordinates of building 37 rooftop
 
 MAX_LIN_VEL = 30
 MIN_LIN_VEL = 0
@@ -25,7 +25,7 @@ yaw = 0 # 0 at east, increase CCW
 lo = 0 # longitude
 la = 0 # latitude
 
-gps_vec = np.array([0, 0])s
+gps_vec = np.array([0, 0])
 imu_vec = np.array([0, 0])
 
 def addAngle(angle1, angle2):
@@ -65,18 +65,18 @@ def cmd_vel_mapping(dist, max_dist, target_angle, min_target_angle):
 		vx = (MAX_LIN_VEL - MIN_LIN_VEL) / max_dist * dist
 	
 
-	# if target angle is positive: turn right
-	# if target angle is negative: turn left
-	if (90 < target_angle < 180): # need to go right
-		wz = MAX_ANG_VEL
+	# if target angle is positive: turn left
+	# if target angle is negative: turn right
+	if (90 < target_angle < 180):
+		wz = MIN_ANG_VEL
 	elif (min_target_angle < target_angle < 90):
-		wz = MAX_ANG_VEL / (90 - min_target_angle) * (target_angle - min_target_angle)
+		wz = MIN_ANG_VEL / (90 - min_target_angle) * (target_angle + min_target_angle)
 	elif (abs(target_angle) < min_target_angle):
 		wz = 0
 	elif (-90 < target_angle < -min_target_angle):
-		wz = MIN_ANG_VEL / (90 - min_target_angle) * (target_angle + min_target_angle)
+		wz = MAX_ANG_VEL / (90 - min_target_angle) * (target_angle - min_target_angle)
 	elif (-180 < target_angle < -90):
-		wz = MIN_ANG_VEL
+		wz = MAX_ANG_VEL
 	
 	return vx, wz
 	
@@ -94,7 +94,7 @@ def hopping_tour(waypoints):
 	rospy.Subscriber("imu_data", Imu , getIMU)
 	#rospy.Subscriber("odom", Odometry , getOdom)
 	twist_pub = rospy.Publisher("cmd_vel", Twist)
-	rate = rospy.Rate(1) # 10hz
+	rate = rospy.Rate(10) # 10hz
 
 	print("system preparing...")
 	
@@ -111,35 +111,26 @@ def hopping_tour(waypoints):
 		u1 = gps_vec / np.linalg.norm(gps_vec)
 		u2 = imu_vec / np.linalg.norm(imu_vec)
 		dot_vec = np.dot(u1, u2)
-		target_angle = np.arccos(dot_product)
+		target_angle = np.rad2deg(np.arccos(dot_vec))
+
 		# u1 cross u2 -> z-positive -> target angle is negative -> turn right
 		# z-negative -> turn left
-		if (np.cross(u1, u2) >= 0)
+		if (np.cross(u1, u2) >= 0):
 			target_angle = -1 * target_angle
-
-
-		# angle = math.acos(la_diff / math.sqrt(la_diff*la_diff + lo_diff*lo_diff)) / math.pi * 180 # degree
-
-		# if (lo_diff < 0):
-		# 	angle = -1 * angle
-
-		# angle = math.atan(la_diff / lo_diff) / math.pi * 180
 
 		# target_angle = addAngle(yaw, -angle)
 		# turn right when target angle is negative
 		# turn left when target angle is positive 
-		rospy.loginfo("current yaw: %.1f" % np.rad2deg(yaw))
-		rospy.loginfo("current target yaw: %.1f" % target_angle)
+		rospy.loginfo("--------------------")
+		rospy.loginfo("current heading angle: %.1f" % np.rad2deg(yaw))
+		rospy.loginfo("current target angle: %.1f" % target_angle)
 
 		dist = distance(lonlat(lo, la), lonlat(*waypoint)).m
-		# temp = math.asin(MAX_DIST/dist) / math.pi * 180
-		# if (temp < min_target_angle):
-		# 	 min_target_angle = temp
+		rospy.loginfo("distance to waypoint %s: %.2f", wp_idx, dist)
 		
 		twist = Twist()
 		lin_vel, ang_vel = cmd_vel_mapping(dist, MAX_DIST * 1.2, target_angle, min_target_angle)
 		# MAX_DIST multiply factor needs to be adjusted manually
-		# cmd_vel_pub.publish(vel_vec)
 		twist.linear = Vector3(lin_vel, 0, 0)
 		twist.angular = Vector3(0, 0, ang_vel)
 		twist_pub.publish(twist)
@@ -147,7 +138,7 @@ def hopping_tour(waypoints):
 		if (wp_idx < n_waypoint):
 			if (dist < MAX_DIST):
 				close_cnt += 1
-				print("reached at a waypoint. move to next waypoint")
+				rospy.loginfo("reached at a waypoint. move to next waypoint")
 		# else:
 			#stop ship
 
