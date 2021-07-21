@@ -9,6 +9,10 @@ from geometry_msgs.msg import Twist, Vector3
 from tf.transformations import euler_from_quaternion
 import time
 
+'''
+Legacy Code. Not Recommended.
+'''
+
 a = 0.8 # factor for stability
 MAX_DIST = 2 * a
 waypoints = [[126.950599, 37.455848], [126.45555, 37.3434343], [126.54444, 37.34343444], [126.5455555, 37.43434343]]
