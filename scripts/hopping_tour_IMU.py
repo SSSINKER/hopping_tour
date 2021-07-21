@@ -90,9 +90,8 @@ def hopping_tour(waypoints):
 	rospy.Subscriber("fix", NavSatFix, getGPS)
 	rospy.Subscriber("imu_data", Imu , getIMU)
 	#rospy.Subscriber("odom", Odometry , getOdom)
-	# twist_pub = rospy.Publisher("cmd_vel", Twist)
-	cmd_vel_pub = rospy.Publisher("cmd_vel", Vector3)
-	rate = rospy.Rate(10) # 10hz
+	twist_pub = rospy.Publisher("cmd_vel", Twist)
+	rate = rospy.Rate(1) # 10hz
 
 	print("system preparing...")
 	
@@ -113,8 +112,10 @@ def hopping_tour(waypoints):
 		# angle = math.atan(la_diff / lo_diff) / math.pi * 180
 
 		target_angle = addAngle(yaw, -angle)
-		print(yaw)
-		print(angle)
+		# turn right when target angle is negative
+		# turn left when target angle is positive 
+		print("current yaw: %.1f", yaw)
+		print("current target yaw"target_angle)
 
 		dist = distance(lonlat(lo, la), lonlat(*waypoint)).m
 		# temp = math.asin(MAX_DIST/dist) / math.pi * 180
@@ -124,12 +125,10 @@ def hopping_tour(waypoints):
 		twist = Twist()
 		lin_vel, ang_vel = cmd_vel_mapping(dist, MAX_DIST * 1.2, target_angle, min_target_angle)
 		# MAX_DIST multiply factor needs to be adjusted manually
-		# vel_vec = Vector3(lin_vel, ang_vel, 0)
 		# cmd_vel_pub.publish(vel_vec)
 		twist.linear = Vector3(lin_vel, 0, 0)
 		twist.angular = Vector3(0, 0, ang_vel)
 		twist_pub.publish(twist)
-		# note: cmd_vel type is Vector3? Twist?
 
 		if (wp_idx < n_waypoint):
 			if (dist < MAX_DIST):
