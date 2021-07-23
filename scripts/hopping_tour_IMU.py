@@ -10,9 +10,10 @@ from geometry_msgs.msg import Twist, Vector3
 from tf.transformations import euler_from_quaternion
 import time
 
-a = 0.8 # factor for stability
-MAX_DIST = 2 * a
-waypoints = [[126.950599, 37.455848], [126.45555, 37.3434343], [126.54444, 37.34343444], [126.5455555, 37.43434343]]
+a = 1 # factor for stability
+MAX_DIST = 0.5 * a
+waypoints = [[126.950650833, 37.4555935], [126.950635833, 37.4557088333], [126.950621167, 37.4558298333], [126.950635833, 37.4557088333],[126.950650833, 37.4555935]] # 1, 2, 3, 2, 1
+# waypoints = [[126.950621167, 37.4558298333], [126.950635833, 37.4557088333], [126.950650833, 37.4555935]] # 3, 2, 1
 # (lon, lat) = (x, y)
 # coordinates of building 37 rooftop
 
@@ -66,11 +67,11 @@ def cmd_vel_mapping(dist, max_dist, target_angle, min_target_angle):
 	elif (abs(target_angle) < min_target_angle):
 		wz = 0
 	elif (-90 < target_angle < -min_target_angle):
-		wz = MAX_ANG_VEL / (90 - min_target_angle) * (target_angle - min_target_angle)
+		wz = MIN_ANG_VEL / (90 - min_target_angle) * (target_angle - min_target_angle)
 	elif (-180 < target_angle < -90):
 		wz = MAX_ANG_VEL
 	
-	return vx, wz
+	return vx, -wz
 	
 
 def hopping_tour(waypoints):
@@ -120,7 +121,7 @@ def hopping_tour(waypoints):
 		rospy.loginfo("distance to waypoint %s: %.2f", wp_idx, dist)
 		
 		twist = Twist()
-		lin_vel, ang_vel = cmd_vel_mapping(dist, MAX_DIST * 1.2, target_angle, min_target_angle)
+		lin_vel, ang_vel = cmd_vel_mapping(dist, MAX_DIST * 1, target_angle, min_target_angle)
 		# MAX_DIST multiply factor needs to be adjusted manually
 		twist.linear = Vector3(lin_vel, 0, 0)
 		twist.angular = Vector3(0, 0, ang_vel)
@@ -129,14 +130,15 @@ def hopping_tour(waypoints):
 		if (wp_idx < n_waypoint):
 			if (dist < MAX_DIST):
 				close_cnt += 1
-				rospy.loginfo("reached at a waypoint. move to next waypoint")
-				time.sleep(5) # for field test & debugging
+				# rospy.loginfo("reached at a waypoint. move to next waypoint")
+				time.sleep(1) # for field test & debugging
 		# else:
-			#stop ship
+			#stop ship exception throw
 
-		if (close_cnt >= 5):
+		if (close_cnt >= 3):
 			close_cnt = 0
 			if (wp_idx < n_waypoint - 1):
+				rospy.loginfo("reached at a waypoint. move to next waypoint")
 				wp_idx += 1
 
 		rate.sleep()
