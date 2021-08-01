@@ -1,0 +1,9 @@
+<launch>
+  <include file="$(find ydlidar_ros_driver)/launch/lidar.launch">
+  </include>
+  <include file="$(find nmea_navsat_driver)/launch/nmea_serial_driver.launch">
+  </include>
+  <node name="imu_odom_publisher" pkg="ebimu_odometry"  type="imu_odom_pub_v1.py"/>
+  <node name="serial_node" pkg="rosserial_python" type="serial_node.py"/>
+  <node name="hopping_tour" pkg="hopping_tour" type="hopping_tour_IMU.py"/>
+</launch>

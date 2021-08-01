@@ -130,7 +130,8 @@ def hopping_tour(waypoints):
 		if (wp_idx < n_waypoint):
 			if (dist < MAX_DIST):
 				close_cnt += 1
-
+				# rospy.loginfo("reached at a waypoint. move to next waypoint")
+				time.sleep(1) # for field test & debugging
 		# else:
 			#stop ship exception throw
 
@@ -138,14 +139,7 @@ def hopping_tour(waypoints):
 			close_cnt = 0
 			if (wp_idx < n_waypoint - 1):
 				rospy.loginfo("reached at a waypoint. move to next waypoint")
-				time.sleep(1) # for field test & debugging
 				wp_idx += 1
-			else
-				stop_vel = Twist()
-				stop_vel.linear = Vector3(0, 0, 0)
-				stop_vel.angular = vector3(0, 0, 0)
-				twist_pun.publish(stop_vel)
-				raise rospy.ROSInterruptException # exit ros
 
 		rate.sleep()
 
