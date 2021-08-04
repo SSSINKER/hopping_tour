@@ -53,9 +53,11 @@ def cmd_vel_mapping(dist, max_dist, target_angle, min_target_angle):
 	vx = 0 # linear velocity
 	wz = 0 # minimum velocity
 	if (dist > max_dist):
-		vx = MAX_LIN_VEL
-	if (dist <= max_dist):
-		vx = (MAX_LIN_VEL - MIN_LIN_VEL) / max_dist * dist
+		vx = MAX_LIN_VEL # 30
+	elif (max_dist * 0.5 <= dist <= max_dist):
+		vx = round(MAX_LIN_VEL * 0.6666) # 20
+	elif (0 < dist < max_dist * 0.5):
+		vx = round(MAX_LIN_VEL * 0.3333) # 10
 	
 
 	# if target angle is positive: turn left
@@ -63,11 +65,11 @@ def cmd_vel_mapping(dist, max_dist, target_angle, min_target_angle):
 	if (90 < target_angle < 180):
 		wz = MIN_ANG_VEL
 	elif (min_target_angle < target_angle < 90):
-		wz = MIN_ANG_VEL / (90 - min_target_angle) * (target_angle + min_target_angle)
+		wz = MIN_ANG_VEL * 0.5
 	elif (abs(target_angle) < min_target_angle):
 		wz = 0
 	elif (-90 < target_angle < -min_target_angle):
-		wz = MIN_ANG_VEL / (90 - min_target_angle) * (target_angle - min_target_angle)
+		wz = MAX_ANG_VEL * 0.5
 	elif (-180 < target_angle < -90):
 		wz = MAX_ANG_VEL
 	
@@ -80,7 +82,7 @@ def hopping_tour(waypoints):
 	wp_idx = 0
 	close_cnt = 0
 	# min_target_angle = 180
-	min_target_angle = 10
+	min_target_angle = 5
 
 	rospy.init_node('hopping_tour', anonymous=True)
 	rospy.Subscriber("fix", NavSatFix, getGPS)
